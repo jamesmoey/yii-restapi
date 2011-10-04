@@ -47,7 +47,7 @@ class RestApiModule extends CWebModule {
   }
 
   public function getCheckAttributeAccessControl($model) {
-    return (isset($this->modelMap[$model]) && $this->modelMap[$model]['attributeAccessControl']);
+    return (isset($this->modelMap[$model]) && isset($this->modelMap[$model]['attributeAccessControl']) && $this->modelMap[$model]['attributeAccessControl']);
   }
 
   public function init() {

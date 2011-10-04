@@ -49,6 +49,18 @@ class ApiController extends CController {
     } else {
       $list[] = $this->getRecordAttribute($this->result);
     }
+    if ($this->getModule()->getCheckAttributeAccessControl($_GET['model'])) {
+      $row = $list[0];
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      foreach ($list as $rowId=>$row) {
+        foreach ($row as $field=>$value) {
+          if (!$user->checkAccess("view/".$_GET['model']."/".$field, array('model'=>$row), true)) {
+            unset($list[$rowId][$field]);
+          }
+        }
+      }
+    }
     $this->renderText(CJSON::encode(array("root"=>$list)));
   }
 
@@ -61,13 +73,20 @@ class ApiController extends CController {
       try {
         $attributes[$includedAttribute] = $record->$includedAttribute;
       } catch (CException $e) {
-        Yii::log($e->getMessage(), CLogger::LEVEL_ERROR, "restapi");
+        Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
       }
     }
     return $attributes;
   }
 
   public function actionList($model) {
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      if (!$user->checkAccess("list/$model", array(), true)) {
+        throw new CHttpException(403, "Read access on $model denied.");
+      }
+    }
     $modelInstance = new $model();
     $limit = isset($_GET['limit'])?$_GET['limit']:50;
     $start = isset($_GET['start'])?$_GET['start']:0;
@@ -109,6 +128,17 @@ class ApiController extends CController {
       if (isset($_GET['sort'])) $mc->setSort($_GET['sort']);
       $this->result = EMongoDocument::model($model)->findAll($mc);
     }
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      foreach ($this->result as $key=>$item) {
+        if (!$user->checkAccess("read/$model", array('model'=>$item), true)) {
+          Yii::log("DENIED: Try to list model $model ID: ".$item->getPrimaryKey(), CLogger::LEVEL_INFO, "restapi");
+          unset($this->result[$key]);
+        }
+      }
+      $this->result = array_values($this->result);
+    }
   }
 
   public function actionView($model, $id) {
@@ -117,6 +147,13 @@ class ApiController extends CController {
       $this->result = CActiveRecord::model($model)->findByPk($id);
     } else if ($modelInstance instanceof EMongoDocument) {
       $this->result = EMongoDocument::model($model)->findByPk(new MongoId($id));
+    }
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      if (!$user->checkAccess("view/$model", array('model'=>$this->result), true)) {
+        throw new CHttpException(403, "Read access on $model denied.");
+      }
     }
   }
 
@@ -127,10 +164,27 @@ class ApiController extends CController {
     }
     $modelInstance = $this->result;
     $modelInstance->setScenario($type);
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      if (!$user->checkAccess("update/$model", array('model'=>$modelInstance, 'scenario'=>$type), true)) {
+        throw new CHttpException(403, "Write access on $model denied.");
+      }
+    }
     $vars = CJSON::decode(file_get_contents('php://input'));
     if (!is_array($vars)) {
       Yii::log("Input need to be Json: ".var_export($vars, true), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Input need to be JSON");
+    }
+    if ($this->getModule()->getCheckAttributeAccessControl($_GET['model'])) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      foreach ($vars as $field=>$value) {
+        if (!$user->checkAccess("update/".$_GET['model']."/".$field, array('model'=>$modelInstance), true)) {
+          unset($vars[$field]);
+          Yii::log("DENIED: Try to set attribute: $field with $value", CLogger::LEVEL_INFO, "restapi");
+        }
+      }
     }
     $modelInstance->setAttributes($vars);
     if ($modelInstance->save()) {
@@ -147,6 +201,13 @@ class ApiController extends CController {
       throw new CHttpException(400, "Did not find any model with ID: " . $id);
     }
     $modelInstance = $this->result;
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      if (!$user->checkAccess("delete/$model", array('model'=>$modelInstance), true)) {
+        throw new CHttpException(403, "Write access on $model denied.");
+      }
+    }
     if (!$modelInstance->delete()) {
       Yii::log(ArrayHelper::recursiveImplode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Can not delete model ID: " . $id);
@@ -161,6 +222,23 @@ class ApiController extends CController {
     if (!is_array($vars)) {
       Yii::log("Input need to be Json: ".var_export($vars, true), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Input need to be JSON");
+    }
+    if ($this->getModule()->accessControl) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      if (!$user->checkAccess("create/$model", array('model'=>$modelInstance), true)) {
+        throw new CHttpException(403, "Write access on $model denied.");
+      }
+    }
+    if ($this->getModule()->getCheckAttributeAccessControl($_GET['model'])) {
+      /** @var CWebUser $user */
+      $user = Yii::app()->user;
+      foreach ($vars as $field=>$value) {
+        if (!$user->checkAccess("update/".$_GET['model']."/".$field, array('model'=>$modelInstance), true)) {
+          unset($vars[$field]);
+          Yii::log("DENIED: Try to set attribute: $field with $value", CLogger::LEVEL_INFO, "restapi");
+        }
+      }
     }
     $modelInstance->setAttributes($vars);
     if ($modelInstance->save()) {

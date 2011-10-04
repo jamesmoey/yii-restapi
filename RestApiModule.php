@@ -11,11 +11,13 @@ class RestApiModule extends CWebModule {
    *     'excludeAll' => true,
    *     'exclude' => array( 'field_to_exclude', 'field_to_exclude', ),
    *     'include' => array( 'addition_field_to_include', ),
+   *     'attributeAccessControl' => true,
    *   ),
    * );
    * </code>
    */
   public $modelMap;
+  public $accessControl = false;
 
   public function checkModel($model) {
     if (!isset($this->modelMap[$model])) return false;
@@ -42,6 +44,10 @@ class RestApiModule extends CWebModule {
 
   public function getIncludedAttribute($model) {
     return isset($this->modelMap[$model]['include'])?$this->modelMap[$model]['include']:array();
+  }
+
+  public function getCheckAttributeAccessControl($model) {
+    return (isset($this->modelMap[$model]) && $this->modelMap[$model]['attributeAccessControl']);
   }
 
   public function init() {

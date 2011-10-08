@@ -61,7 +61,7 @@ class ApiController extends CController {
         }
       }
     }
-    $this->renderText(CJSON::encode(array("root"=>$list)));
+    $this->renderText(CJSON::encode(array("root"=>$list, "success"=>true)));
   }
 
   protected function getRecordAttribute($record) {
@@ -73,6 +73,21 @@ class ApiController extends CController {
       try {
         $attributes[$includedAttribute] = $record->$includedAttribute;
       } catch (CException $e) {
+        Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
+      }
+    }
+    foreach ($record->relations() as $name=>$relation) {
+      try {
+        if ($relation[0] == CActiveRecord::HAS_ONE || $relation[0] == CActiveRecord::BELONGS_TO) {
+          if (!@class_exists($relation[1], true)) continue;
+          /** @var $related CActiveRecord */
+          $related = $record->$name;
+          if ($related == null) continue;
+          if ($related->hasAttribute("name")) $attributes[$name] = $related->name;
+          else if (method_exists($related, "toString")) $attributes[$name] = $related->toString();
+          else $attributes[$name] = $related->getPrimaryKey();
+        }
+      } catch (Exception $e) {
         Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
       }
     }
@@ -91,10 +106,10 @@ class ApiController extends CController {
     $limit = isset($_GET['limit'])?$_GET['limit']:50;
     $start = isset($_GET['start'])?$_GET['start']:0;
     if (isset($_GET['page'])) {
-      $start += ($_GET['page'] * $limit);
+      $start += (($_GET['page']-1) * $limit);
     }
     if ($modelInstance instanceof CActiveRecord) {
-      $c = new CDbCriteria();
+      $c = new CDbCriteria($this->getModule()->getDefaultCriteria($model));
       $c->offset = $start;
       $c->limit = $limit;
       if (isset($_GET['filter'])) {
@@ -107,8 +122,28 @@ class ApiController extends CController {
           } else $c->addCondition("$field = $condition");
         }
       }
-      if (isset($_GET['sort'])) $c->order = $_GET['sort'];
-      if (isset($_GET['group'])) $c->group = $_GET['group'];
+      if (isset($_GET['sort'])) {
+        $sort = CJSON::decode($_GET['sort']);
+        if (is_array($sort)) {
+          foreach ($sort as $s) {
+            $c->order .= $s['property'] . ' ' . $s['direction'] . ',';
+          }
+          $c->order = substr($c->order, 0, -1);
+        } else {
+          $c->order = $_GET['sort'];
+        }
+      }
+      if (isset($_GET['group'])) {
+        $group = CJSON::decode($_GET['group']);
+        if (is_array($group)) {
+          foreach ($group as $s) {
+            $c->group .= $s['property'] . ',';
+          }
+          $c->group = substr($c->group, 0, -1);
+        } else {
+          $c->group = $_GET['group'];
+        }
+      }
       $this->result = CActiveRecord::model($model)->findAll($c);
     } else if ($modelInstance instanceof EMongoDocument) {
       $mc = new EMongoCriteria();

@@ -12,6 +12,7 @@ class RestApiModule extends CWebModule {
    *     'exclude' => array( 'field_to_exclude', 'field_to_exclude', ),
    *     'include' => array( 'addition_field_to_include', ),
    *     'attributeAccessControl' => true,
+   *     'defaultCriteria' => array for CDbCriteria,
    *   ),
    * );
    * </code>
@@ -28,6 +29,12 @@ class RestApiModule extends CWebModule {
     $classname = Yii::import($this->modelMap[$model]['class']);
     $this->modelMap[$classname] = $this->modelMap[$model];
     return $classname;
+  }
+
+  public function getDefaultCriteria($model) {
+    if (isset($this->modelMap[$model]['defaultCriteria'])) {
+      return $this->modelMap[$model]['defaultCriteria'];
+    } else return array();
   }
 
   public function getExcludedAttribute($model) {
@@ -50,9 +57,12 @@ class RestApiModule extends CWebModule {
     return (isset($this->modelMap[$model]) && isset($this->modelMap[$model]['attributeAccessControl']) && $this->modelMap[$model]['attributeAccessControl']);
   }
 
-  public function init() {
+  protected function init() {
     if (empty($this->modelMap)) {
       Yii::log("Model Map is not set. No Model will rest.", CLogger::LEVEL_ERROR, "restapi");
+    }
+    if (is_string($this->modelMap)) {
+      $this->modelMap = require(Yii::getPathOfAlias($this->modelMap).".php");
     }
     parent::init();
   }

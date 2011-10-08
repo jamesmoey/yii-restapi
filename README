@@ -1,0 +1,3 @@
+==How to use this module.==
+You need to added it into your modules configuration and use the RestUrlRule as one of the rules in Url Manager. In
+modules configuration, you must specify the restmodel configuration.

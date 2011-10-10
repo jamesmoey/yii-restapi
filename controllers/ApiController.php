@@ -1,6 +1,7 @@
 <?php
 
 Yii::import("ext.tools.components.*");
+Yii::import("restapi.components.CommonRest");
 
 class ApiController extends CController {
 
@@ -41,57 +42,8 @@ class ApiController extends CController {
 	 */
   protected function afterAction($action) {
     if (empty($this->result) && !is_array($this->result)) throw new CHttpException(404, "Not found with ID:".$_GET['id']);
-    $list = array();
-    if (is_array($this->result)) {
-      foreach ($this->result as $instance) {
-        $list[] = $this->getRecordAttribute($instance);
-      }
-    } else {
-      $list[] = $this->getRecordAttribute($this->result);
-    }
-    if ($this->getModule()->getCheckAttributeAccessControl($_GET['model'])) {
-      $row = $list[0];
-      /** @var CWebUser $user */
-      $user = Yii::app()->user;
-      foreach ($list as $rowId=>$row) {
-        foreach ($row as $field=>$value) {
-          if (!$user->checkAccess("view/".$_GET['model']."/".$field, array('model'=>$row), true)) {
-            unset($list[$rowId][$field]);
-          }
-        }
-      }
-    }
+    $list = CommonRest::buildModelJsonReply($this->result, $_GET['model']);
     $this->renderText(CJSON::encode(array("root"=>$list, "success"=>true)));
-  }
-
-  protected function getRecordAttribute($record) {
-    /** @var $record CActiveRecord */
-    $attributes = $record->getAttributes();
-    $excludeArray = array_flip($this->getModule()->getExcludedAttribute($_GET['model']));
-    $attributes = array_intersect_key($attributes, array_diff_key($attributes, $excludeArray));
-    foreach ($this->getModule()->getIncludedAttribute($_GET['model']) as $includedAttribute) {
-      try {
-        $attributes[$includedAttribute] = $record->$includedAttribute;
-      } catch (CException $e) {
-        Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
-      }
-    }
-    foreach ($record->relations() as $name=>$relation) {
-      try {
-        if ($relation[0] == CActiveRecord::HAS_ONE || $relation[0] == CActiveRecord::BELONGS_TO) {
-          if (!@class_exists($relation[1], true)) continue;
-          /** @var $related CActiveRecord */
-          $related = $record->$name;
-          if ($related == null) continue;
-          if ($related->hasAttribute("name")) $attributes[$name] = $related->name;
-          else if (method_exists($related, "toString")) $attributes[$name] = $related->toString();
-          else $attributes[$name] = $related->getPrimaryKey();
-        }
-      } catch (Exception $e) {
-        Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
-      }
-    }
-    return $attributes;
   }
 
   public function actionList($model) {

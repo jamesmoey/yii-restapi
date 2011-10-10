@@ -150,11 +150,13 @@ class ApiController extends CController {
       throw new CHttpException(400, "Did not find any model with ID: " . $id);
     }
     $modelInstance = $this->result;
-    $modelInstance->setScenario($type);
+    $modelInstance->setScenario("update");
     if ($this->getModule()->accessControl) {
+      $modelInstance->setScenario($type);
       /** @var CWebUser $user */
       $user = Yii::app()->user;
-      if (!$user->checkAccess("update/$model", array('model'=>$modelInstance, 'scenario'=>$type), true)) {
+      if ($type !== "update") $type = "update.".$type;
+      if (!$user->checkAccess("$type/$model", array('model'=>$modelInstance, 'scenario'=>$type), true)) {
         throw new CHttpException(403, "Write access on $model denied.");
       }
     }

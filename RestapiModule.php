@@ -19,6 +19,7 @@ class RestApiModule extends CWebModule {
    */
   public $modelMap;
   public $accessControl = false;
+  public $validOrigin = array();
 
   public function checkModel($model) {
     if (!isset($this->modelMap[$model])) return false;
@@ -65,5 +66,12 @@ class RestApiModule extends CWebModule {
       $this->modelMap = require(Yii::getPathOfAlias($this->modelMap).".php");
     }
     parent::init();
+  }
+
+  public function validOrigin($origin) {
+    foreach ($this->validOrigin as $valid) {
+      if (preg_match($valid, $origin) > 0) return true;
+    }
+    return false;
   }
 }

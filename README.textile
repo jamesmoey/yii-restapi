@@ -7,7 +7,7 @@ In modules configuration, you must specify the modelMap configuration. If you ne
 cross platform capability
 
 e.g
-```php
+<pre><code>
     'modules' => array(
       'restapi' => array(
         'modelMap'=>'application.restmodel',
@@ -16,7 +16,7 @@ e.g
         ),
       ),
     ),
-```
+</code></pre>
 
 - modelMap need to be in application alias format. It should point to a file that contain the mapping configuration for
 models.
@@ -25,7 +25,7 @@ models.
 Check out Cross-Site HTTP request on (https://developer.mozilla.org/En/HTTP_Access_Control)
 
 Sample of the model map configuration file.
-```php
+<pre><code>
     array(
       'ModelRestName' => array(
         'class' => 'application.path.alias.ModelRestName',
@@ -36,14 +36,16 @@ Sample of the model map configuration file.
         'defaultCriteria' => array for CDbCriteria,
       ),
     );
-```
+</code></pre>
 
 Token Access to REST API
 ------------------------
 If you are going to use Access Control in this module, you will need run migration tool from Yii.
 
 e.g
+<pre><code>
     php yiic migrate --migrationPath=application.modules.restapi.migrations
+</code></pre>
 
 This will create the needed table in the database to keep track of API access token, key and secret.
 
@@ -51,7 +53,7 @@ In controller outside of restapi module that need Rest Api Access Control just a
 restapi.components.RestApiAccessControl as one of its filter.
 
 e.g
-```php
+<pre><code>
     public function filters() {
       return array(
         array(
@@ -60,6 +62,6 @@ e.g
         'accessControl',
       );
     }
-```
+</code></pre>
 
 API user will need to get temporary token from Api controller in the restapi module using their api key and secret key.

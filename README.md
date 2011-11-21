@@ -4,7 +4,7 @@ You need to load this module into the Yii modules configuration and use the Rest
 Manager.
 
 In modules configuration, you must specify the modelMap configuration. If you need the module to output valid Origin for
-cross platform capability
+cross platform capability, include validOrigin configuration as well.
 
 e.g
 <pre><code>
@@ -21,8 +21,8 @@ e.g
 - modelMap need to be in application alias format. It should point to a file that contain the mapping configuration for
 models.
 
-- validOrigin need to an array, it should contain a list of domain that is allow to access this Rest API through AJAX.
-Check out Cross-Site HTTP request on (https://developer.mozilla.org/En/HTTP_Access_Control)
+- validOrigin need to an array, it should contain a list of domain (in Regular Expression) that is allow to access this
+Rest API through AJAX. Check out Cross-Site HTTP request on (https://developer.mozilla.org/En/HTTP_Access_Control)
 
 Sample of the model map configuration file.
 <pre><code>
@@ -36,6 +36,20 @@ Sample of the model map configuration file.
         'defaultCriteria' => array for CDbCriteria,
       ),
     );
+</code></pre>
+
+Add URL routing rule class in URL Manager.
+
+<pre><code>
+    'urlManager' => array(
+      'class'=>'CUrlManager',
+      'urlFormat' => 'path',
+      'rules' => array(
+        array(
+          'class' => 'restapi.components.RestUrlRule'
+        ),
+      ),
+    ),
 </code></pre>
 
 Token Access to REST API

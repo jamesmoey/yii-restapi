@@ -116,7 +116,7 @@ class ApiUsers extends CActiveRecord
 
   public function tokenExpired() {
     if ($this->token == "") return true;
-    if (strtotime($this->token_expire) > time()) return true;
+    if (strtotime($this->token_expire) < time()) return true;
     return false;
   }
 

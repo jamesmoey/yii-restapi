@@ -113,4 +113,25 @@ class ApiUsers extends CActiveRecord
 			'criteria'=>$criteria,
 		));
 	}
+
+  public function tokenExpired() {
+    if ($this->token == "") return true;
+    if (strtotime($this->token_expire) > time()) return true;
+    return false;
+  }
+
+  public function generateNewToken() {
+    $this->token = $this->genToken();
+    $this->token_expire = date('Y-m-d H:i:s', strtotime("+24 hours"));
+  }
+
+  protected function genToken($len = 32) {
+    mt_srand((double)microtime()*1000000 + time());
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZqwertyuiopasdfghjklzxcvbnm-_.!*)(';
+    $numChars = strlen($chars) - 1; $token = '';
+    for ( $i=0; $i<$len; $i++ ) {
+      $token .= $chars[ mt_rand(0, $numChars) ];
+    }
+    return $token;
+  }
 }

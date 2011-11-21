@@ -17,6 +17,9 @@ class RestApiAccessControl extends CFilter {
         header('Access-Control-Allow-Origin: '.$_SERVER['HTTP_ORIGIN']);
       }
     }
+    if ($_SERVER['REQUEST_METHOD'] == "OPTIONS") {
+      return false;
+    }
     return true;
   }
 }

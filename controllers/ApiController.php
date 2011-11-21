@@ -7,6 +7,14 @@ class ApiController extends CController {
 
   public $result;
 
+  public function filters() {
+    return array(
+      array(
+        'restapi.components.RestApiAccessControl -getToken',
+      ),
+    );
+  }
+
   /**
 	 * This method is invoked right before an action is to be executed (after all possible filters.)
 	 * You may override this method to do last-minute preparation for the action.
@@ -33,6 +41,31 @@ class ApiController extends CController {
     Yii::log($error['trace'], CLogger::LEVEL_ERROR, "restapi");
     $this->renderText($error['message']);
     Yii::app()->end(1);
+  }
+
+  /**
+   * Get Token for API Access.
+   */
+  public function actionGetToken($api, $secret) {
+    $identity = new RestApiUserIdentity();
+    $identity->setKeySecret($api, $secret);
+    if ($identity->authenticate()) {
+      $apiuser = $identity->getApiUser();
+      if ($apiuser->tokenExpired()) {
+        $apiuser->generateNewToken();
+        if ($apiuser->save()) {
+          $result = array('success'=>true, 'token'=>$apiuser->token, 'expiry'=>strtotime($apiuser->token_expire));
+        } else {
+          $result = array('success'=>false, 'message'=>"Can not save the generated token");
+        }
+      } else {
+        $result = array('success'=>true, 'token'=>$apiuser->token, 'expiry'=>strtotime($apiuser->token_expire));
+      }
+    } else {
+      $result = array('success'=>false, 'message'=>"Access Denied");
+    }
+    echo json_encode($result);
+    Yii::app()->end();
   }
 
   /**

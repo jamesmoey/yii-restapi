@@ -8,6 +8,7 @@ class RestApiUserIdentity extends CBaseUserIdentity {
   protected $key;
   protected $secret;
 
+  /** @var $user ApiUsers */
   protected $user;
 
   public function setKeySecret($key, $secret) {
@@ -27,16 +28,15 @@ class RestApiUserIdentity extends CBaseUserIdentity {
    */
   public function authenticate() {
     if ($this->token) {
-      /** @var $user ApiUsers */
       $this->user = ApiUsers::model()->findByAttributes(array("token"=>$this->token));
-      if ($this->user != null && strtotime($this->user->token_expire) > time()) {
+      if ($this->user != null && !$this->user->tokenExpired()) {
         $this->errorCode = self::ERROR_NONE;
         return true;
       }
       $this->errorMessage = "Invalid Token";
     } else if ($this->key && $this->secret) {
       /** @var $user ApiUsers */
-      $this->user = ApiUsers::model()->findByAttributes(array("key"=>$this->key, "secret"=>$this->secret));
+      $this->user = ApiUsers::model()->findByAttributes(array("key"=>$this->key, "secret"=>$this->secret, "active"=>1));
       if ($this->user != null) {
         $this->errorCode = self::ERROR_NONE;
         return true;
@@ -45,6 +45,13 @@ class RestApiUserIdentity extends CBaseUserIdentity {
     }
     $this->errorCode = self::ERROR_UNKNOWN_IDENTITY;
     return false;
+  }
+
+  /**
+   * @return ApiUsers
+   */
+  public function getApiUser() {
+    return $this->user;
   }
 
   public function getId() {

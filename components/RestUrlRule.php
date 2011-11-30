@@ -24,6 +24,9 @@ class RestUrlRule extends CBaseUrlRule {
    */
   public function parseUrl($manager, $request, $pathInfo, $rawPathInfo) {
     $validRule = array(
+      array('/^api\/token\/([^\/]+)\/([^\/]+)$/', 'GET', 'restapi/api/getToken',
+        'parameters'=>array('api'=>1, 'secret'=>2)
+      ),
       array('/^api\/([a-zA-Z][a-z0-9A-Z\._\-]+)\/(.*)$/', 'GET', 'restapi/api/view',
         'parameters'=>array("model"=>1, "id"=>2),
       ),

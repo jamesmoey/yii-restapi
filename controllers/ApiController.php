@@ -1,7 +1,7 @@
 <?php
 
 Yii::import("ext.tools.components.*");
-Yii::import("restapi.components.CommonRest");
+Yii::import("restapi.components.*");
 
 class ApiController extends CController {
 
@@ -31,7 +31,9 @@ class ApiController extends CController {
         $_GET['model'] = $this->getModule()->includeModel($_GET['model']);
       }
     } else {
-      throw new CHttpException(501, 'Model is not specify');
+      if (in_array($action->getId(), array('list', 'view', 'update', 'delete', 'create'))) {
+        throw new CHttpException(501, 'Model is not specify');
+      }
     }
     return parent::beforeAction($action);
   }

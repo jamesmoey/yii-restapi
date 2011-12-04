@@ -1,5 +1,7 @@
 How to use this module.
 =======================
+This module is only for Yii version 1.1.8 and above.
+
 You need to load this module into the Yii modules configuration and use the RestUrlRule as one of the rules in Url
 Manager.
 

@@ -1,6 +1,5 @@
 <?php
 
-Yii::import("ext.tools.components.*");
 Yii::import("restapi.components.*");
 
 class ApiController extends CController {
@@ -214,7 +213,7 @@ class ApiController extends CController {
     if ($modelInstance->save()) {
       $modelInstance->refresh();
     } else {
-      Yii::log(ArrayHelper::recursiveImplode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
+      Yii::log(implode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Can not save model ID: " . $id);
     }
   }
@@ -233,7 +232,7 @@ class ApiController extends CController {
       }
     }
     if (!$modelInstance->delete()) {
-      Yii::log(ArrayHelper::recursiveImplode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
+      Yii::log(implode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Can not delete model ID: " . $id);
     } else {
       Yii::app()->end();
@@ -269,7 +268,7 @@ class ApiController extends CController {
       $modelInstance->refresh();
       $this->result = $modelInstance;
     } else {
-      Yii::log(ArrayHelper::recursiveImplode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
+      Yii::log(implode("\n", $modelInstance->getErrors()), CLogger::LEVEL_ERROR, "restapi");
       throw new CHttpException(500, "Can not save model: " . $model);
     }
   }

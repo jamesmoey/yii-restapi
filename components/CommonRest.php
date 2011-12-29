@@ -60,20 +60,30 @@ class CommonRest extends CComponent {
         Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
       }
     }
-    foreach ($record->relations() as $name=>$relation) {
-      try {
-        if ($relation[0] == CActiveRecord::HAS_ONE || $relation[0] == CActiveRecord::BELONGS_TO) {
-          if (!@class_exists($relation[1], true)) continue;
-          /** @var $related CActiveRecord */
-          $related = $record->$name;
-          if ($related == null) continue;
-          if ($related->hasAttribute("name")) $attributes[$name] = $related->name;
-          else if ($related->hasAttribute("title")) $attributes[$name] = $related->title;
-          else if (method_exists($related, "toString")) $attributes[$name] = $related->toString();
-          else $attributes[$name] = $related->getPrimaryKey();
+    if (method_exists($record, 'attributeRestMapping')) {
+      foreach ($record->attributeRestMapping() as $field=>$map) {
+        if (isset($record->$field)) {
+          $attributes[$map] = $record->$field;
+          unset($attributes[$field]);
         }
-      } catch (Exception $e) {
-        Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
+      }
+    }
+    if (method_exists($record, "relations")) {
+      foreach ($record->relations() as $name=>$relation) {
+        try {
+          if ($relation[0] == CActiveRecord::HAS_ONE || $relation[0] == CActiveRecord::BELONGS_TO) {
+            if (!@class_exists($relation[1], true)) continue;
+            /** @var $related CActiveRecord */
+            $related = $record->$name;
+            if ($related == null) continue;
+            if ($related->hasAttribute("name")) $attributes[$name] = $related->name;
+            else if ($related->hasAttribute("title")) $attributes[$name] = $related->title;
+            else if (method_exists($related, "toString")) $attributes[$name] = $related->toString();
+            else $attributes[$name] = $related->getPrimaryKey();
+          }
+        } catch (Exception $e) {
+          Yii::log($e->getMessage(), CLogger::LEVEL_INFO, "restapi");
+        }
       }
     }
     return $attributes;

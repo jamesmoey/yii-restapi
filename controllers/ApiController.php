@@ -131,6 +131,9 @@ class ApiController extends CController {
         }
       }
       $this->result = CActiveRecord::model($model)->findAll($c);
+    } else if (@class_exists('EActiveResource') && $modelInstance instanceof EActiveResource) {
+      /** @var $list EActiveResource[] */
+      $this->result = EActiveResource::model($model)->findAll();
     } else if (@class_exists('EMongoDocument') && $modelInstance instanceof EMongoDocument) {
       $mc = new EMongoCriteria();
       $mc->setLimit($limit);
@@ -168,6 +171,8 @@ class ApiController extends CController {
       $this->result = CActiveRecord::model($model)->findByPk($id);
     } else if (@class_exists('EMongoDocument') && $modelInstance instanceof EMongoDocument) {
       $this->result = EMongoDocument::model($model)->findByPk(new MongoId($id));
+    } else if ($modelInstance instanceof EActiveResource) {
+      $this->result = EActiveResource::model($model)->findById($id);
     }
     if ($this->getModule()->accessControl) {
       /** @var CWebUser $user */

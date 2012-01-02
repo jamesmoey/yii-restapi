@@ -59,6 +59,9 @@ class RestApiModule extends CWebModule {
   }
 
   protected function init() {
+    Yii::import($this->getId().".components.*");
+    Yii::import($this->getId().".models.*");
+
     if (empty($this->modelMap)) {
       Yii::log("Model Map is not set. No Model will rest.", CLogger::LEVEL_ERROR, "restapi");
     }

@@ -14,8 +14,11 @@ class m111118_024648_create_api_users extends CDbMigration
       'token_expire'=>'datetime',
       'created'=>'datetime NOT NULL',
       'active'=>'boolean DEFAULT "1"'
-    ), 'ENGINE=InnoDB');
+    ));
     $this->createIndex("api_users_token_unq", "{{api_users}}", "token", true);
+    if (strpos($this->getDbConnection()->getDriverName(), 'mysql') !== false) {
+      $this->getDbConnection()->createCommand("ALTER TABLE {{api_users}} ENGINE=InnoDB")->execute();
+    }
     $this->insert("{{api_users}}", array(
       "username"=>"Api Tester",
       "password"=>"pHuFum8tewuPregesWaWuSw9",

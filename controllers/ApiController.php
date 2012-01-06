@@ -77,6 +77,7 @@ class ApiController extends CController {
   protected function afterAction($action) {
     if (empty($this->result) && !is_array($this->result)) throw new CHttpException(404, "Not found with ID:".$_GET['id']);
     $list = CommonRest::buildModelJsonReply($this->result, $_GET['model']);
+    header('content-type: application/json');
     $this->renderText(CJSON::encode(array("root"=>$list, "success"=>true)));
   }
 

@@ -1,7 +1,5 @@
 <?php
 
-Yii::import("restapi.components.*");
-
 class ApiController extends CController {
 
   public $result;

@@ -1,7 +1,4 @@
 <?php
-
-Yii::import("restapi.models.ApiUsers");
-
 class RestApiUserIdentity extends CBaseUserIdentity {
 
   protected $token;

@@ -1,6 +1,4 @@
 <?php
-Yii::import("restapi.components.RestApiUserIdentity");
-
 class RestApiAccessControl extends CFilter {
 
   protected function preFilter($filterChain) {
